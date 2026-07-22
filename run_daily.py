@@ -48,13 +48,15 @@ def export_json_csv(conn, prices_json_path: str, prices_csv_path: str, index_jso
     with open(prices_json_path, "w", encoding="utf-8") as f:
         json.dump(rows, f, ensure_ascii=False, indent=2)
 
-    if rows:
-        import csv
+    import csv
 
-        with open(prices_csv_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=rows[0].keys())
-            writer.writeheader()
-            writer.writerows(rows)
+    fieldnames = list(rows[0].keys()) if rows else [
+        "id", "date", "supermarket", "product_key", "product_name", "price", "url", "is_outlier",
+    ]
+    with open(prices_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
 
     # Separate from prices.json (raw price rows, the dataset proper) because
     # the dashboard (Task 21) only needs the much smaller index_daily series —
