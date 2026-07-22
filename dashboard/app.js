@@ -1,5 +1,5 @@
-const DATASET_RELEASE_BASE = "https://github.com/gsmkev/hepy/releases/download/dataset";
-const RAW_MAIN_BASE = "https://raw.githubusercontent.com/gsmkev/hepy/main";
+const DATASET_RELEASE_BASE = "https://github.com/koeti-labs/hepy/releases/download/dataset";
+const RAW_MAIN_BASE = "https://raw.githubusercontent.com/koeti-labs/hepy/main";
 // GitHub Release assets don't send CORS headers (only <a href> downloads
 // work there, not fetch()). index.json is small enough to also commit to
 // the repo (via the CI workflow, dashboard/data/index.json) and read from
