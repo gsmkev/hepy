@@ -52,6 +52,21 @@ def insert_price(
     conn.commit()
 
 
+def delete_price(conn: sqlite3.Connection, date: str, supermarket: str, product_key: str) -> None:
+    """Remove any existing row for this (date, supermarket, product_key).
+
+    Needed because insert_price only ever replaces a row when there's a
+    fresh value to write — if a re-run of the same date now finds no
+    plausible match where an earlier run had (wrongly) recorded one, the
+    stale row would otherwise never be cleared.
+    """
+    conn.execute(
+        "DELETE FROM prices WHERE date = ? AND supermarket = ? AND product_key = ?",
+        (date, supermarket, product_key),
+    )
+    conn.commit()
+
+
 def read_prices(
     conn: sqlite3.Connection,
     product_key: str | None = None,

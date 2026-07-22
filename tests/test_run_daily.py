@@ -36,6 +36,27 @@ def test_run_daily_inserts_and_survives_one_site_failing(tmp_path):
     assert rows[0]["price"] == 6500.0
 
 
+class NoMatchScraper(Scraper):
+    name = "good"
+
+    def search(self, query):
+        # A completely unrelated result — select_best_match must reject it.
+        return [ProductMatch(name="Detergente lavavajilla 500ml", price=8000.0, url="https://good/p/9")]
+
+
+def test_run_daily_clears_a_stale_match_when_rerun_finds_none(tmp_path):
+    conn = db.connect(str(tmp_path / "t.db"))
+    db.init_schema(conn)
+    # Simulate an earlier run (before a matching fix landed) having wrongly
+    # recorded a match for this exact date/supermarket/product_key.
+    db.insert_price(conn, "2026-07-22", "good", "arroz", "Detergente lavavajilla 500ml", 8000.0, "https://good/p/9")
+
+    summary = run_daily.run(conn, BASKET, [NoMatchScraper()], date="2026-07-22")
+
+    assert summary["missing"] == 1
+    assert db.read_prices(conn, product_key="arroz", supermarket="good") == []
+
+
 def test_export_json_csv_writes_csv_header_even_with_no_rows(tmp_path):
     conn = db.connect(str(tmp_path / "t.db"))
     db.init_schema(conn)

@@ -26,6 +26,10 @@ def run(conn, basket: list[dict], scrapers: list[Scraper], date: str) -> dict:
                 if best is None:
                     missing += 1
                     log.info("no plausible match for %s on %s", item["product_key"], scraper.name)
+                    # Clears any stale row from an earlier same-day run that
+                    # had (wrongly) recorded a match here before a matching
+                    # fix landed — otherwise it would silently linger.
+                    db.delete_price(conn, date, scraper.name, item["product_key"])
                     continue
 
                 history = [
