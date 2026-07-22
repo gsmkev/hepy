@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hepy",
+  // Pinned, not auto-generated per-deploy — keeps Workers runtime behavior
+  // stable across deploys instead of silently drifting to "today" each time.
+  "compatibility_date": "2026-07-22",
+  "assets": {
+    "directory": "dashboard"
+  },
+  "observability": {
+    "enabled": true
+  }
+  // No "compatibility_flags": ["nodejs_compat"] — this is a static HTML/JS/CSS
+  // site with zero Worker-side code, so the Node.js compat layer is unused
+  // surface area, not a real dependency.
+}

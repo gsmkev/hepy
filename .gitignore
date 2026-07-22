@@ -12,4 +12,3 @@ uv.lock
 !ipc_oficial.json
 !dashboard/data/*.json
 .playwright-mcp/
-.playwright-mcp/
