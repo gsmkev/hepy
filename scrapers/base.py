@@ -73,6 +73,25 @@ def _tokenize(name: str) -> set[str]:
     return {_stem(w) for w in words if w not in _UNITS_AND_STOPWORDS}
 
 
+_UNIT_TO_BASE = {
+    "kg": ("g", 1000.0), "g": ("g", 1.0), "gr": ("g", 1.0), "grs": ("g", 1.0),
+    "l": ("ml", 1000.0), "lt": ("ml", 1000.0), "litro": ("ml", 1000.0), "litros": ("ml", 1000.0),
+    "ml": ("ml", 1.0),
+    "docena": ("un", 12.0), "unidad": ("un", 1.0), "un": ("un", 1.0),
+}
+_QUANTITY_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(kg|grs?|g|litros?|lt|l|ml|docena|unidad|un)\b")
+
+
+def _extract_quantity(text: str) -> tuple[float, str] | None:
+    # ponytail: only the first quantity found is used — good enough for
+    # single-pack basket items, would need a rewrite for multipacks ("3x500g").
+    match = _QUANTITY_RE.search(_normalize(text))
+    if not match:
+        return None
+    unit, factor = _UNIT_TO_BASE[match.group(2)]
+    return (round(float(match.group(1).replace(",", ".")) * factor, 3), unit)
+
+
 def select_best_match(
     canonical_name: str,
     candidates: list[ProductMatch],
@@ -97,12 +116,21 @@ def select_best_match(
     if not canon_tokens:
         return candidates[0] if candidates else None
     canon_norm = _normalize(canonical_name)
+    canon_qty = _extract_quantity(canonical_name)
 
     strict = bcp_category in _RAW_INGREDIENT_CATEGORIES or product_key in _RAW_INGREDIENT_PRODUCT_KEYS
 
     for candidate in candidates:
         cand_tokens = _tokenize(candidate.name)
         if not canon_tokens.issubset(cand_tokens):
+            continue
+        # A candidate in a completely different pack size isn't the same
+        # product for price-comparison purposes — confirmed live: "Aceite de
+        # girasol 900ml" matched a 1,5 LT bottle, since quantities were never
+        # compared (digits are dropped by _tokenize, unit words are
+        # stopwords). Only enforced when the canonical name actually states
+        # a quantity.
+        if canon_qty is not None and _extract_quantity(candidate.name) != canon_qty:
             continue
         if strict:
             cand_norm = _normalize(candidate.name)

@@ -175,3 +175,30 @@ def test_select_best_match_rejects_orange_colored_hairbrush():
 def test_select_best_match_rejects_orange_essence():
     candidates = [ProductMatch(name="ESENCIA DE NARANJA MICKEY 120ML", price=8350.0, url="u")]
     assert select_best_match("Naranja 1kg", candidates, "alimentacion_frutas", "naranja_1kg") is None
+
+# Fourth pass — quantity mismatch found live: a 900ml canonical item matched
+# a completely different pack size because quantities were never compared
+# (digits are dropped by _tokenize, unit words are stopwords).
+
+def test_select_best_match_rejects_wrong_pack_size():
+    candidates = [ProductMatch(name="ACEITE ALSAMAR  DE GIRASOL 1,5 LT", price=31350.0, url="u")]
+    result = select_best_match(
+        "Aceite de girasol 900ml", candidates, "alimentacion_aceites_y_grasas", "aceite_girasol_900ml",
+    )
+    assert result is None
+
+
+def test_select_best_match_accepts_matching_pack_size_in_different_unit_spelling():
+    candidates = [ProductMatch(name="ACEITE GIRASOL COCINERO 900 ML", price=15000.0, url="good")]
+    result = select_best_match(
+        "Aceite de girasol 900ml", candidates, "alimentacion_aceites_y_grasas", "aceite_girasol_900ml",
+    )
+    assert result is not None
+    assert result.url == "good"
+
+
+def test_select_best_match_ignores_quantity_when_canonical_name_has_none():
+    candidates = [ProductMatch(name="Detergente Ala 3L", price=12000.0, url="good")]
+    result = select_best_match("Detergente", candidates)
+    assert result is not None
+    assert result.url == "good"
