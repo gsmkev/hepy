@@ -1,0 +1,7 @@
+3c:{"name":"v2","weight":0}
+d0:[]
+d1:[]
+c4:{"name":"Arroz Primicia Amarillo, 500grs","price":3550,"photosUrl":"$c5","unit":"unit","subUnit":"","subQty":0,"description":"Arroz amarillo de calidad premium.","sku":"7840045019307","ean":"$c6","maxQty":10}
+c9:{"name":"Arroz Primicia rojo, 500gr","price":13800,"photosUrl":"$ca","unit":"unit","subUnit":"","subQty":0,"description":"","sku":"7840045018904","ean":"$cb","maxQty":10}
+d7:["https://ik.imagekit.io/kfspmjidb/Real-Online/7840045018904.jpg"]
+d8:["7840045019307"]

@@ -96,6 +96,32 @@ def extract_ecommercepro_products(html: str, base_url: str) -> list[dict]:
     return products
 
 
+def extract_nextjs_rsc_products(text: str) -> list[dict]:
+    """Parse product records out of a Next.js React Server Components (RSC)
+    payload — the "Flight" wire format Next.js sends when a request carries
+    an `RSC: 1` header, requesting the raw server-rendered data instead of
+    HTML. Real (realonline.com.py) renders its search results this way with
+    no client-callable product-search API; the payload is a stream of
+    `<id>:<json-or-primitive>` lines, one per server-component data chunk.
+
+    Returns [{"name", "price", "sku"}, ...] for every line whose JSON object
+    has all three fields; every other line (categories, UI state, etc.) is
+    skipped silently.
+    """
+    products: list[dict] = []
+    for line in text.splitlines():
+        m = re.match(r"^[0-9a-f]+:(\{.*\})$", line)
+        if not m:
+            continue
+        try:
+            obj = json.loads(m.group(1))
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict) and "name" in obj and "price" in obj and "sku" in obj:
+            products.append({"name": obj["name"], "price": float(obj["price"]), "sku": obj["sku"]})
+    return products
+
+
 class Scraper:
     name: str = "base"
     base_url: str = ""

@@ -1,4 +1,4 @@
-from scrapers.base import extract_jsonld_products, extract_ecommercepro_products, Scraper, ProductMatch
+from scrapers.base import extract_jsonld_products, extract_ecommercepro_products, extract_nextjs_rsc_products, Scraper, ProductMatch
 
 def test_extract_jsonld_products_from_fixture():
     with open("fixtures/jsonld_sample.html", encoding="utf-8") as f:
@@ -31,3 +31,11 @@ def test_extract_ecommercepro_products_handles_sale_and_plain_price():
     assert products[0]["url"] == "https://example.com.py/pechuga-fresca-p12459"
     assert products[1]["name"] == "ARROZ DON ARROZ INTEGRAL 1KG"
     assert products[1]["price"] == 14000.0  # plain price (empty <ins> placeholder skipped)
+
+def test_extract_nextjs_rsc_products_ignores_non_product_lines():
+    with open("fixtures/real_search_arroz.txt", encoding="utf-8") as f:
+        text = f.read()
+    products = extract_nextjs_rsc_products(text)
+    assert len(products) == 2
+    assert products[0] == {"name": "Arroz Primicia Amarillo, 500grs", "price": 3550.0, "sku": "7840045019307"}
+    assert products[1] == {"name": "Arroz Primicia rojo, 500gr", "price": 13800.0, "sku": "7840045018904"}
