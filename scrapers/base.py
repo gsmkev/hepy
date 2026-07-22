@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import requests
 from bs4 import BeautifulSoup
 
-USER_AGENT = "Hepy/0.1 (+https://github.com/koeti-labs/hepy; contacto: labs@koeti.dev)"
+USER_AGENT = "Hepy/0.1 (+https://github.com/gsmkev/hepy; contacto: gsmkev@gmail.com)"
 
 
 @dataclass

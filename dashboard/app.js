@@ -1,4 +1,4 @@
-const DATASET_RELEASE_BASE = "https://github.com/koeti-labs/hepy/releases/download/dataset";
+const DATASET_RELEASE_BASE = "https://github.com/gsmkev/hepy/releases/download/dataset";
 
 async function loadIndexData() {
   const res = await fetch(`${DATASET_RELEASE_BASE}/index.json`);
