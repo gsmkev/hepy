@@ -1,0 +1,8 @@
+[project]
+name = "hepy"
+version = "0.1.0"
+description = "Hepy — índice de precios de alta frecuencia para Paraguay, validado contra el IPC-BCP"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
