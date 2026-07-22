@@ -5,9 +5,14 @@ import statistics
 def is_outlier(history: list[float], new_price: float, threshold: float = 3.5) -> bool:
     """Flag new_price as an outlier relative to history using a robust
     z-score (MAD-based) on the log price. Returns False if there isn't
-    enough history (< 3 points) to judge.
+    enough history (< 3 points) to judge. A non-positive new_price is
+    always flagged (likely a scraper/parse error, not a real price).
+    When history has zero variation (mad == 0), any different price is
+    flagged regardless of `threshold`.
     """
-    if len(history) < 3 or new_price <= 0:
+    if new_price <= 0:
+        return True
+    if len(history) < 3:
         return False
 
     log_history = [math.log(p) for p in history if p > 0]
