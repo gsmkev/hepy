@@ -1,0 +1,44 @@
+{
+  "index_daily": [
+    {
+      "date": "2026-07-22",
+      "supermarket": "AGREGADO",
+      "value": 100.0
+    },
+    {
+      "date": "2026-07-22",
+      "supermarket": "arete",
+      "value": 100.0
+    },
+    {
+      "date": "2026-07-22",
+      "supermarket": "biggie",
+      "value": 100.0
+    },
+    {
+      "date": "2026-07-22",
+      "supermarket": "casa_rica",
+      "value": 100.0
+    },
+    {
+      "date": "2026-07-22",
+      "supermarket": "grutter",
+      "value": 100.0
+    },
+    {
+      "date": "2026-07-22",
+      "supermarket": "los_jardines",
+      "value": 100.0
+    },
+    {
+      "date": "2026-07-22",
+      "supermarket": "real",
+      "value": 100.0
+    },
+    {
+      "date": "2026-07-22",
+      "supermarket": "salemma",
+      "value": 100.0
+    }
+  ]
+}

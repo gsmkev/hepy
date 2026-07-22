@@ -2,22 +2,80 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hepy — índice de precios Paraguay</title>
+  <meta name="description" content="Índice de precios de alta frecuencia para Paraguay, construido con scraping diario de supermercados online y ponderado con la metodología del IPC-BCP.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%231b2a22'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='%23f2c14e' font-family='monospace'%3E%E2%82%B2%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
           integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
 </head>
 <body>
-  <h1>Hepy 🧺</h1>
-  <p>Índice de precios de alta frecuencia para Paraguay — Koeti Labs</p>
+  <div class="wrap">
+    <header class="site-header">
+      <div>
+        <h1 class="wordmark">Hep<span class="peso">₲</span></h1>
+        <p class="tagline">Índice de precios de alta frecuencia para Paraguay, construido con scraping diario de supermercados online.</p>
+      </div>
+      <nav class="site-nav">
+        <a href="https://github.com/gsmkev/hepy">Código</a>
+        <a href="#dataset">Dataset</a>
+        <a href="#ipc">Vs. IPC-BCP</a>
+      </nav>
+    </header>
 
-  <h2>Índice agregado (base 100)</h2>
-  <canvas id="aggregate-chart"></canvas>
+    <div class="board" id="board">
+      <p class="board-eyebrow">Índice agregado — hoy</p>
+      <div class="board-figure">
+        <span class="board-number" id="board-number">—</span>
+        <span class="board-delta" id="board-delta"></span>
+      </div>
+      <p class="board-date" id="board-date"></p>
+    </div>
 
-  <h2>Por supermercado</h2>
-  <div id="supermarket-charts"></div>
+    <section id="evolucion">
+      <h2 class="section-title">Evolución del índice</h2>
+      <div class="chart-panel">
+        <canvas id="aggregate-chart" height="90"></canvas>
+      </div>
+    </section>
 
-  <h2>Descargar dataset (CC BY 4.0 — citar la fuente)</h2>
-  <ul id="downloads"></ul>
+    <section id="puestos">
+      <h2 class="section-title">Por supermercado</h2>
+      <div class="puestos" id="puestos"></div>
+    </section>
+
+    <section id="comparar">
+      <h2 class="section-title">Comparar supermercados</h2>
+      <div class="chart-panel">
+        <div class="compare-controls" id="compare-controls"></div>
+        <canvas id="compare-chart" height="100"></canvas>
+      </div>
+    </section>
+
+    <section id="ipc">
+      <h2 class="section-title">Hepy vs. IPC oficial (BCP)</h2>
+      <div class="ipc-panel">
+        <p>Validación empírica: correlación entre el índice Hepy y el Índice de Precios al
+        Consumidor oficial del Banco Central del Paraguay, con el rezago (en días) que
+        maximiza la correlación.</p>
+        <p class="ipc-status" id="ipc-status">Cargando…</p>
+        <p class="ipc-source" id="ipc-source"></p>
+      </div>
+    </section>
+
+    <section id="dataset">
+      <h2 class="section-title">Descargar dataset</h2>
+      <p class="tagline">Licencia CC BY 4.0 — citar como "Hepy — Koeti Labs (<span id="cc-year"></span>), &lt;URL del dataset&gt;".</p>
+      <ul class="downloads" id="downloads"></ul>
+    </section>
+
+    <footer class="site-footer">
+      <p>Código: <a href="https://github.com/gsmkev/hepy/blob/main/LICENSE-CODE">Apache-2.0</a> ·
+      Dataset: <a href="https://github.com/gsmkev/hepy/blob/main/LICENSE-DATA">CC BY 4.0</a> ·
+      <a href="https://github.com/gsmkev/hepy">Repositorio</a></p>
+    </footer>
+  </div>
 
   <script src="app.js"></script>
 </body>

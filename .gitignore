@@ -10,3 +10,6 @@ uv.lock
 !package.json
 !fixtures/*.json
 !ipc_oficial.json
+!dashboard/data/*.json
+.playwright-mcp/
+.playwright-mcp/
