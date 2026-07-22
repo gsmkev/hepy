@@ -1,0 +1,10 @@
+{
+  "_source": "Banco Central del Paraguay, Informe de Inflación (IPC), Departamento de Índices de Precios",
+  "_source_url": "https://www.bcp.gov.py/documents/20117/2368114/IPC+Informe+Marzo+2026.pdf",
+  "_note": "Índice GENERAL (base diciembre 2017 = 100), extraído del anexo mensual del Informe de Inflación de marzo 2026, que incluye la serie histórica. Fechado al último día de cada mes.",
+  "index_general": {
+    "2026-01-31": 139.7,
+    "2026-02-28": 139.7,
+    "2026-03-31": 140.8
+  }
+}
