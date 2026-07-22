@@ -202,3 +202,30 @@ def test_select_best_match_ignores_quantity_when_canonical_name_has_none():
     result = select_best_match("Detergente", candidates)
     assert result is not None
     assert result.url == "good"
+
+# Fifth pass — "docena" has no leading digit ("Huevos docena", not "12
+# docena"), so quantity was silently never enforced for this item at all,
+# confirmed live: a 30-egg carton passed as a dozen.
+
+def test_select_best_match_rejects_thirty_egg_carton_for_a_dozen():
+    candidates = [ProductMatch(name="HUEVO CAMPERO  X 30 UNI HUEVO RICO", price=37000.0, url="u")]
+    assert select_best_match("Huevos docena", candidates, "alimentacion_lacteos_y_huevos", "huevos_docena") is None
+
+
+def test_select_best_match_accepts_a_dozen_eggs_written_as_12un():
+    candidates = [ProductMatch(name="HUEVO NUTRIHUEVOS TIPO A CJA. 12UN", price=11250.0, url="good")]
+    result = select_best_match("Huevos docena", candidates, "alimentacion_lacteos_y_huevos", "huevos_docena")
+    assert result is not None
+    assert result.url == "good"
+
+
+def test_select_best_match_bare_unidad_does_not_force_a_weight_comparison():
+    # "Jabón de tocador unidad" is priced per bar, not by weight — real bars
+    # describe their weight in grams, a different axis entirely. A bare
+    # "unidad"/"un" with no digit must not manufacture a quantity constraint.
+    candidates = [ProductMatch(name="JABON DE TOCADOR LUX OQUIDEA NEG X 125 G", price=6500.0, url="good")]
+    result = select_best_match(
+        "Jabón de tocador unidad", candidates, "bienes_servicios_diversos_cuidado_personal", "jabon_tocador_unidad",
+    )
+    assert result is not None
+    assert result.url == "good"
