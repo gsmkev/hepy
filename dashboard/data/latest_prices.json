@@ -42,16 +42,6 @@
       "is_outlier": 0
     },
     {
-      "id": 541,
-      "date": "2026-07-22",
-      "supermarket": "arete",
-      "product_key": "huevos_docena",
-      "product_name": "HUEVO YEMITA TIPO A 30 UNID",
-      "price": 25500.0,
-      "url": "https://www.arete.com.py/huevo-yemita-tipo-a-30-unid-p100238",
-      "is_outlier": 0
-    },
-    {
       "id": 547,
       "date": "2026-07-22",
       "supermarket": "arete",
@@ -122,16 +112,6 @@
       "is_outlier": 0
     },
     {
-      "id": 535,
-      "date": "2026-07-22",
-      "supermarket": "biggie",
-      "product_key": "huevos_docena",
-      "product_name": "Huevos Yemita Tipo A de 30 Unidades.",
-      "price": 32300.0,
-      "url": "https://www.biggie.com.py/search?q=huevos docena",
-      "is_outlier": 0
-    },
-    {
       "id": 538,
       "date": "2026-07-22",
       "supermarket": "biggie",
@@ -189,16 +169,6 @@
       "product_name": "HARINA DE TRIGO MOLINI PIZZUTI P/ PIZZA TIPO 0 1KG",
       "price": 42000.0,
       "url": "https://www.casarica.com.py/harina-de-trigo-molini-pizzuti-p-pizza-tipo-0-1kg-p36309",
-      "is_outlier": 0
-    },
-    {
-      "id": 513,
-      "date": "2026-07-22",
-      "supermarket": "casa_rica",
-      "product_key": "huevos_docena",
-      "product_name": "HUEVO CAMPERO  X 30 UNI HUEVO RICO",
-      "price": 37000.0,
-      "url": "https://www.casarica.com.py/huevo-campero-x-30-uni-huevo-rico-p41270",
       "is_outlier": 0
     },
     {
@@ -269,16 +239,6 @@
       "product_name": "ACEITE DE GIRASOL COSTA DEL SOL X 900ML (12)",
       "price": 15500.0,
       "url": "https://grutteronline.casagrutter.com.py/producto/aceite-de-girasol-costa-del-sol-x-900ml-12/",
-      "is_outlier": 0
-    },
-    {
-      "id": 484,
-      "date": "2026-07-22",
-      "supermarket": "grutter",
-      "product_key": "azucar_1kg",
-      "product_name": "AZUCAR GRUTTER 500 GRS.",
-      "price": 3500.0,
-      "url": "https://grutteronline.casagrutter.com.py/producto/azucar-grutter-500-grs/",
       "is_outlier": 0
     },
     {
