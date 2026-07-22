@@ -4,7 +4,7 @@ import logging
 import db
 import index
 import outliers
-from scrapers.base import Scraper
+from scrapers.base import Scraper, select_best_match
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("run_daily")
@@ -20,12 +20,14 @@ def run(conn, basket: list[dict], scrapers: list[Scraper], date: str) -> dict:
             for item in basket:
                 query = item["queries"].get(scraper.name, item["nombre_canonico"])
                 matches = scraper.search(query)
-                if not matches:
+                best = select_best_match(
+                    item["nombre_canonico"], matches, item.get("bcp_category"), item["product_key"],
+                )
+                if best is None:
                     missing += 1
-                    log.info("no match for %s on %s", item["product_key"], scraper.name)
+                    log.info("no plausible match for %s on %s", item["product_key"], scraper.name)
                     continue
 
-                best = matches[0]
                 history = [
                     r["price"]
                     for r in db.read_prices(conn, product_key=item["product_key"], supermarket=scraper.name)

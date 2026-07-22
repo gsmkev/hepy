@@ -1,5 +1,6 @@
 import json
 import re
+import unicodedata
 from dataclasses import dataclass
 
 import requests
@@ -13,6 +14,108 @@ class ProductMatch:
     name: str
     price: float
     url: str
+
+
+# Basket categories where a search engine matching on a bare ingredient name
+# (e.g. "banana", "papa", "queso") routinely surfaces a processed product
+# using that ingredient as a flavor/component instead of the ingredient
+# itself — confirmed live: banana-flavored whey protein for "banana",
+# potato gnocchi for "papa", tomato purée for "tomate". _PROCESSED_INDICATOR_WORDS
+# below is only applied for these categories/keys.
+_RAW_INGREDIENT_CATEGORIES = {
+    "alimentacion_frutas",
+    "alimentacion_hortalizas_y_tuberculos",
+    "alimentacion_carnes",
+    "alimentacion_legumbres",
+}
+_RAW_INGREDIENT_PRODUCT_KEYS = {"queso_paraguay_1kg", "huevos_docena"}
+
+_UNITS_AND_STOPWORDS = {
+    "kg", "g", "gr", "grs", "l", "lt", "litro", "litros", "ml", "docena",
+    "unidad", "un", "de", "del", "la", "el", "los", "las",
+}
+
+_PROCESSED_INDICATOR_WORDS = {
+    "agua", "jugo", "gaseosa", "colorante", "saborizada", "saborizado",
+    "noqui", "noquis", "pure", "salsa", "sopa", "aderezo", "empanada",
+    "tratamiento", "shampoo", "champu", "proteina", "whey", "suplemento",
+    "relleno", "helado", "yogur", "yogurt", "galletita", "galletitas",
+    "barra", "bebida", "postre", "torta", "budin", "nugget", "nuggets",
+    "milanesa", "empanado",
+    # Confirmed live in a second pass: frozen/prepared potato snacks
+    # ("papa frita"/"pre frita"/"p/freír") dominate every site's "papa"
+    # results; egg-adjacent products that aren't a dozen chicken eggs
+    # (Easter chocolate eggs, quail eggs, egg salad); onion/orange sold as
+    # a dehydrated seasoning or jam rather than the fresh ingredient.
+    "frita", "frito", "freir", "mermelada", "deshidratada", "deshidratado",
+    "triturada", "triturado", "pascua", "ensalada", "codorniz",
+    # Third pass: a misspelled variant seen live ("desidratada", missing the
+    # "h"), pickled onion, a hairbrush that happens to be orange-colored
+    # (not the fruit), egg noodles/pasta (contains egg, isn't a dozen eggs).
+    "desidratada", "desidratado", "granulada", "granulado", "macerado",
+    "macerada", "vinagre", "peine", "fideo", "fideos",
+    # Fourth pass: a flavoring extract, not the fruit itself.
+    "esencia",
+}
+
+
+def _normalize(text: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", text.lower())
+    return "".join(c for c in decomposed if not unicodedata.combining(c))
+
+
+def _stem(word: str) -> str:
+    return word[:-1] if len(word) > 3 and word.endswith("s") else word
+
+
+def _tokenize(name: str) -> set[str]:
+    words = re.findall(r"[a-z]+", _normalize(name))
+    return {_stem(w) for w in words if w not in _UNITS_AND_STOPWORDS}
+
+
+def select_best_match(
+    canonical_name: str,
+    candidates: list[ProductMatch],
+    bcp_category: str | None = None,
+    product_key: str | None = None,
+) -> ProductMatch | None:
+    """Pick the first candidate that plausibly refers to canonical_name,
+    instead of blindly trusting the search engine's top result.
+
+    Real supermarket search engines routinely surface unrelated products
+    that merely mention the query term — a banana-flavored whey protein for
+    "banana", potato gnocchi for "papa", or (confirmed live) "sopa
+    paraguaya" (a corn-cake dish) for "queso paraguay" (a cheese) on shared
+    words alone. A candidate must contain every significant word of
+    canonical_name (accent/case/simple-plural insensitive); for basket items
+    in a raw-ingredient category (fruit, vegetable, meat, legumes) or
+    explicitly flagged via product_key, it must additionally contain none of
+    a fixed list of processed-food indicator words. Returns None (treated as
+    "no match", not a wrong one) if nothing qualifies.
+    """
+    canon_tokens = _tokenize(canonical_name)
+    if not canon_tokens:
+        return candidates[0] if candidates else None
+    canon_norm = _normalize(canonical_name)
+
+    strict = bcp_category in _RAW_INGREDIENT_CATEGORIES or product_key in _RAW_INGREDIENT_PRODUCT_KEYS
+
+    for candidate in candidates:
+        cand_tokens = _tokenize(candidate.name)
+        if not canon_tokens.issubset(cand_tokens):
+            continue
+        if strict:
+            cand_norm = _normalize(candidate.name)
+            # Substring (not exact-token) check: catches glued compounds
+            # like "PREFRITAS" containing "frita", which a token-set
+            # intersection would miss. A denylist word already present in
+            # the canonical name itself never disqualifies (defensive: no
+            # current basket item hits this, but it's a real correctness
+            # trap for future denylist additions).
+            if any(word in cand_norm and word not in canon_norm for word in _PROCESSED_INDICATOR_WORDS):
+                continue
+        return candidate
+    return None
 
 
 def extract_jsonld_products(html: str) -> list[dict]:

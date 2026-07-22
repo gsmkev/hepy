@@ -1,4 +1,4 @@
-from scrapers.base import extract_jsonld_products, extract_ecommercepro_products, extract_nextjs_rsc_products, extract_woocommerce_products, extract_stock_products, Scraper, ProductMatch
+from scrapers.base import extract_jsonld_products, extract_ecommercepro_products, extract_nextjs_rsc_products, extract_woocommerce_products, extract_stock_products, select_best_match, Scraper, ProductMatch
 
 def test_extract_jsonld_products_from_fixture():
     with open("fixtures/jsonld_sample.html", encoding="utf-8") as f:
@@ -57,3 +57,121 @@ def test_extract_stock_products_parses_gs_price_spans():
     assert products[0]["name"] == "ARROZ CHINES INTEGRAL BOLSA 1KG"
     assert products[0]["price"] == 21000.0
     assert products[0]["url"] == "https://www.stock.com.py/products/10070-arroz-chines-integral-bsa-1kg.aspx"
+
+# Regression fixtures below are real bad matches observed live in production
+# (see legal/revision_tos.md discussion) — a naive "take the first search
+# result" approach recorded these as prices for the wrong product entirely.
+
+def test_select_best_match_rejects_unrelated_category():
+    # Casa Rica's search for "banana"/"cebolla"/"tomate" returned dog food —
+    # doesn't even contain the ingredient name.
+    candidates = [ProductMatch(name="ALIMENTO P/ PERRO MASTER DOG CACHORRO 1KG", price=31650.0, url="u")]
+    assert select_best_match("Banana 1kg", candidates, "alimentacion_frutas", "banana_1kg") is None
+
+def test_select_best_match_rejects_flavored_processed_product():
+    # A banana-flavored whey protein contains "banana" as a flavor, not the
+    # product itself.
+    candidates = [ProductMatch(name="PROTEINA LIFE BAL WHEY PROTEIN BANANA 1KG - SUPL D", price=236000.0, url="u")]
+    assert select_best_match("Banana 1kg", candidates, "alimentacion_frutas", "banana_1kg") is None
+
+def test_select_best_match_rejects_unrelated_hair_product():
+    candidates = [ProductMatch(name="TRATAMIENTO CAPILAR 3EN1 BANANA SMOOTH GUISSE 1KG", price=19900.0, url="u")]
+    assert select_best_match("Banana 1kg", candidates, "alimentacion_frutas", "banana_1kg") is None
+
+def test_select_best_match_accepts_real_banana_and_skips_bad_ones_first():
+    candidates = [
+        ProductMatch(name="PROTEINA LIFE BAL WHEY PROTEIN BANANA 1KG - SUPL D", price=236000.0, url="bad"),
+        ProductMatch(name="BANANA 1 KG KARAPE", price=5150.0, url="good"),
+    ]
+    result = select_best_match("Banana 1kg", candidates, "alimentacion_frutas", "banana_1kg")
+    assert result is not None
+    assert result.url == "good"
+
+def test_select_best_match_rejects_potato_gnocchi_for_raw_potato():
+    candidates = [ProductMatch(name="ÑOQUIS QUIERO MAS DE PAPA 1KG", price=15000.0, url="u")]
+    assert select_best_match("Papa 1kg", candidates, "alimentacion_hortalizas_y_tuberculos", "papa_1kg") is None
+
+def test_select_best_match_rejects_meat_tenderizer_for_beef():
+    # Contains "carne" but not "vacuna" — fails plain containment already.
+    candidates = [ProductMatch(name="ABLANDADOR DE CARNE 300GR", price=8000.0, url="u")]
+    assert select_best_match("Carne vacuna (nalga) 1kg", candidates, "alimentacion_carnes", "carne_vacuna_nalga_1kg") is None
+
+def test_select_best_match_rejects_sopa_paraguaya_for_queso_paraguay():
+    # "paraguaya" is not the whole word "paraguay" — a real, tricky
+    # linguistic collision between a corn-cake dish and a type of cheese.
+    candidates = [ProductMatch(name="SOPA PARAGUAYA JAKARU 4 QUESOS CONG. 1KG", price=18000.0, url="u")]
+    assert select_best_match("Queso Paraguay 1kg", candidates, "alimentacion_lacteos_y_huevos", "queso_paraguay_1kg") is None
+
+def test_select_best_match_accepts_brand_prefixed_non_strict_category():
+    # Toothpaste isn't a raw-ingredient category, so no processed-word
+    # denylist applies — a brand prefix before the generic term is fine.
+    candidates = [ProductMatch(name="PACK ORAL-B PASTA DENTAL 3D WHITE 90G", price=25000.0, url="u")]
+    result = select_best_match("Pasta dental 90g", candidates, "bienes_servicios_diversos_cuidado_personal", "pasta_dental_90g")
+    assert result is not None
+
+def test_select_best_match_returns_none_for_empty_candidates():
+    assert select_best_match("Banana 1kg", [], "alimentacion_frutas", "banana_1kg") is None
+
+# Second pass of real bad matches found after the first fix shipped —
+# potato/onion/egg/orange sites all surfaced processed products instead of
+# the raw ingredient.
+
+def test_select_best_match_rejects_frozen_fries_for_raw_potato():
+    candidates = [
+        ProductMatch(name="Papa Frita Aviko Tradicional de 450 gr.", price=17450.0, url="u1"),
+        ProductMatch(name="PAPA MC CAIN P/FREIR GOLDEN LONG 1KG", price=32000.0, url="u2"),
+    ]
+    assert select_best_match("Papa 1kg", candidates, "alimentacion_hortalizas_y_tuberculos", "papa_1kg") is None
+
+def test_select_best_match_rejects_dehydrated_onion_flakes():
+    candidates = [ProductMatch(name="CEBOLLA ARCO IRIS DESHIDRATADA TRITURADA PAQ.25GR", price=5450.0, url="u")]
+    assert select_best_match("Cebolla 1kg", candidates, "alimentacion_hortalizas_y_tuberculos", "cebolla_1kg") is None
+
+def test_select_best_match_rejects_orange_jam():
+    candidates = [ProductMatch(name="MERMELADA NARANJA FRASCO 454 GR", price=13550.0, url="u")]
+    assert select_best_match("Naranja 1kg", candidates, "alimentacion_frutas", "naranja_1kg") is None
+
+def test_select_best_match_rejects_easter_chocolate_egg_and_quail_egg_and_egg_salad():
+    candidates = [
+        ProductMatch(name="HUEVO DE PASCUA COSTA 85GR", price=34500.0, url="u1"),
+        ProductMatch(name="HUEVO DE CODORNIZ SUN 320G", price=29900.0, url="u2"),
+        ProductMatch(name="ENSALADA FRESCA C/ HUEVO X KG.", price=75000.0, url="u3"),
+    ]
+    assert select_best_match("Huevos docena", candidates, "alimentacion_lacteos_y_huevos", "huevos_docena") is None
+
+def test_select_best_match_denylist_word_does_not_self_disqualify_own_canon_name():
+    # Defensive case: if a denylist word were ever also part of the
+    # canonical name, it must not block an otherwise-correct match.
+    candidates = [ProductMatch(name="TORTA DE CHOCOLATE 500G", price=15000.0, url="u")]
+    result = select_best_match("Torta 500g", candidates, "alimentacion_otros_productos", "torta_500g")
+    assert result is not None
+
+# Third pass — glued compound word, misspelling, pickled onion, egg
+# noodles, and a hairbrush that happens to be orange-colored, all found
+# live after the second fix shipped.
+
+def test_select_best_match_rejects_prefritas_as_one_glued_word():
+    # "PREFRITAS" contains "frita" as a substring but not as a separate
+    # token — a token-set intersection check would miss this.
+    candidates = [ProductMatch(name="PAPAS PREFRITAS PEPE CHEF 1KG", price=19500.0, url="u")]
+    assert select_best_match("Papa 1kg", candidates, "alimentacion_hortalizas_y_tuberculos", "papa_1kg") is None
+
+def test_select_best_match_rejects_misspelled_dehydrated_onion():
+    candidates = [ProductMatch(name="CEBOLLA DESIDRATADA GRANULADA TIVA GOURMET 35GR", price=20000.0, url="u")]
+    assert select_best_match("Cebolla 1kg", candidates, "alimentacion_hortalizas_y_tuberculos", "cebolla_1kg") is None
+
+def test_select_best_match_rejects_pickled_onion():
+    candidates = [ProductMatch(name="CEBOLLA BLANCA MACERADO EN VINAGRE", price=17900.0, url="u")]
+    assert select_best_match("Cebolla 1kg", candidates, "alimentacion_hortalizas_y_tuberculos", "cebolla_1kg") is None
+
+def test_select_best_match_rejects_egg_noodles_for_dozen_eggs():
+    candidates = [ProductMatch(name="FIDEO ALEMANES SPAETZLE G+G CON HUEVOS 500GR", price=24950.0, url="u")]
+    assert select_best_match("Huevos docena", candidates, "alimentacion_lacteos_y_huevos", "huevos_docena") is None
+
+def test_select_best_match_rejects_orange_colored_hairbrush():
+    candidates = [ProductMatch(name="PEINE ESCOVEL LIVIA NARANJA", price=21000.0, url="u")]
+    assert select_best_match("Naranja 1kg", candidates, "alimentacion_frutas", "naranja_1kg") is None
+
+def test_select_best_match_rejects_orange_essence():
+    candidates = [ProductMatch(name="ESENCIA DE NARANJA MICKEY 120ML", price=8350.0, url="u")]
+    assert select_best_match("Naranja 1kg", candidates, "alimentacion_frutas", "naranja_1kg") is None
