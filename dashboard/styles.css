@@ -75,6 +75,8 @@ header.site-header {
 
 .wordmark .peso {
   color: var(--accent);
+  margin-left: 0.15em;
+  font-size: 0.8em;
 }
 
 .tagline {
