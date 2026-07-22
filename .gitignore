@@ -6,4 +6,3 @@ __pycache__/
 *.json
 !basket.json
 !package.json
-.streamlit/
